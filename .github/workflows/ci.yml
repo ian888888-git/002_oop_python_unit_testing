@@ -1,0 +1,53 @@
+name: CI Process
+on:
+  push:
+    branches: [main, ian-dev]
+  pull_request: 
+    branches: [main]
+jobs:
+  quality-assurance:
+    runs-on: 
+      ubuntu-latest
+    steps:
+      # Langkah 1: Download/copy semua file kode dari repositori GitHub Anda ke dalam server komputer ini
+      - name: Downoad Source Code
+        uses: actions/checkout@v4
+      # Langkah 2: Install bahasa Python di dalam server komputer virtual tersebut
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5 
+        with:
+          python-version: 3.11
+          # Mengaktifkan fitur cache agar proses install library di running berikutnya berjalan kilat
+          cache: "pip"
+      # Langkah 3: Install library pihak ketiga yang dibutuhkan untuk pengujian
+      - name: Install Library
+        run: |
+          python -m pip install --upgrade pip 
+          pip install flake8 pytest
+          # Jika Anda punya file requirements.txt, otomatis install semua isinya di sini
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+      # Langkah 4: Cek kerapian penulisan kode Python Anda berdasarkan standar OOP/Clean Code
+      - name: Linting (Cek Kerapian Kode)
+        run: |
+          # Perintah ini akan langsung menggagalkan pipa CI jika ada error sintaksis fatal
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # Perintah ini hanya memberikan peringatan (tidak menggagalkan) jika kodenya cuma kurang rapi atau terlalu kompleks
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics 
+      # Langkah 5: Mengeksekusi seluruh file pengujian otomatis Anda (test_cleaner.py, test_metrics.py, dll)
+      - name: Jalankan Unit Testing (Pytest)
+        run: |
+          # Robot mencari folder pengujian dan menjalankan Pytest untuk mengecek kebenaran logika fungsi
+          pytest tests/
+  docker-build:
+    needs: quality-assurance
+    runs-on: ubuntu-latest
+    steps: 
+      # Langkah 1: Download kode ke server baru ini
+      - name: Download Source Code 
+        uses: actions/checkout@v4
+
+      # Langkah 2: Langsung uji coba merakit Dockerfile Anda menjadi sebuah Image
+      # (Tidak perlu memanggil 'uses: actions/setup-docker' karena Docker sudah bawaan lahir di Ubuntu GitHub)
+      - name: Gladi Resik Docker Build 
+        run: |
+          docker build -t local-app-check:latest .
