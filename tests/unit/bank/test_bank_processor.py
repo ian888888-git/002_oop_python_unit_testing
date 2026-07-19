@@ -119,12 +119,12 @@ class TestBankProcessor:
             iot_db.validate_tx(mock_iot_transactions)
         assert str(exc_info.value.code) == BusinessRuleValidationError.ERR_NOT_FOUND
     
-    def test_error_account_frozen(self, mock_cdc_frozen, mock_iot_trsansactions):
+    def test_error_account_frozen(self, mock_cdc_frozen, mock_iot_transactions):
         """Skenario: Transaksi ditolak jika status_rekening nasabah bernilai 'FROZEN'."""
         iot_db = BankProcessor()
         iot_db.sync_customer(mock_cdc_frozen)
         with pytest.raises(BusinessRuleValidationError) as exc_info:
-            iot_db.validate_tx(mock_iot_trsansactions)
+            iot_db.validate_tx(mock_iot_transactions)
         assert str(exc_info.value.code) == BusinessRuleValidationError.ERR_ACCOUNT_FROZEN
     
     def test_error_over_limit(self, mock_cdc_insert, mock_iot_transactions):
