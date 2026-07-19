@@ -12,7 +12,7 @@ class BankProcessor:
         # State store lokal di memori
         self.customers = {}
     
-    def sync_customer(self, cdc: dict)  -> None:
+    def sync_customer(self, cdc: dict)  -> dict:
         """Menangkap dan menyinkronkan data nasabah dari PostgreSQL CDC."""
         # 1. Validasi struktur utama (Kategori: Data Invalid)
         if "op" not in cdc or "after" not in cdc: 
@@ -25,7 +25,7 @@ class BankProcessor:
             if not account_id:
                 raise DataEmptyError(DataEmptyError.ERR_CDC_EMPTY)
             self.customers.pop(account_id, None)
-            return
+            return {}
         # 2. Validasi field wajib (Kategori: Data Empty)
         acc_id = payload.get("account_id")
         if not acc_id:
@@ -36,6 +36,8 @@ class BankProcessor:
             "account_status": payload.get("account_status"),
             "daily_limit": payload.get("daily_limit", 0)
         }
+        # PERBAIKAN UTAMA: Kembalikan data nasabah yang baru disimpan agar lolos pengujian
+        return self.customers[acc_id]
     
     def validate_tx(self, iot: dict) -> dict:
         """Memproses data transaksi IoT dan cek anomali berdasar batasan bisnis."""
