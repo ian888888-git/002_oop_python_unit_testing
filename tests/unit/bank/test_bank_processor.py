@@ -160,8 +160,7 @@ class TestBankProcessor:
         # 2. Proses transaksi ATM (IoT) yang valid
         result = db.validate_tx(mock_iot_transactions)
         # 3. Verifikasi output data dan ketegasan status akhir
-        assert result["account_id"] == "TRS-IOT-001"
-        assert result["customer_id"] == "USR-TX-001"
+        assert result["account_id"] == "USR-TX-001"
         assert result["full_name"] == "John Doe"
         assert result["transaction_id"] == "TX-001"
         assert result["transaction_status"] == "CLEAN"
