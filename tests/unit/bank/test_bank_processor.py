@@ -156,14 +156,14 @@ class TestBankProcessor:
         """Memastikan transaksi IoT yang memenuhi semua kriteria bisnis berhasil diproses."""
         db = BankProcessor()
         # 1. Daftarkan nasabah ke memori terlebih dahulu via CDC
-        db.sync_customer(mock_cdc_insert)
+        data_master = db.sync_customer(mock_cdc_insert)
         # 2. Proses transaksi ATM (IoT) yang valid
         result = db.validate_tx(mock_iot_transactions)
         # 3. Verifikasi output data dan ketegasan status akhir
         assert result["account_id"] == "USR-TX-001"
-        assert result["full_name"] == "John Doe"
+        assert data_master["full_name"] == "John Doe"
         assert result["transaction_id"] == "TX-001"
         assert result["transaction_status"] == "CLEAN"
-        assert result["account_status"] == "ACTIVE"
+        assert data_master["account_status"] == "ACTIVE"
         assert result["amount"] == 1000000
         assert "processed_at" in result
