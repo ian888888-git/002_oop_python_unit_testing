@@ -60,7 +60,7 @@ class BankProcessor:
             raise BusinessRuleValidationError(BusinessRuleValidationError.ERR_LIMIT)
         
         return {
-            "acc_id": acc_id,
+            "account_id": acc_id,
             "full_name": nasabah["full_name"],
             "transaction_id": iot.get("transaction_id"),
             "account_status": nasabah["account_status"],
