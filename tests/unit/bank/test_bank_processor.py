@@ -163,7 +163,7 @@ class TestBankProcessor:
         assert result["account_id"] == "USR-TX-001"
         assert data_master["full_name"] == "John Doe"
         assert result["transaction_id"] == "TX-001"
-        assert result["transaction_status"] == "CLEAN"
         assert data_master["account_status"] == "ACTIVE"
+        assert result["transaction_status"] == "CLEAN"
         assert result["amount"] == 1000000
         assert "processed_at" in result

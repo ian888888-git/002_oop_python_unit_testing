@@ -53,16 +53,16 @@ class BankProcessor:
 
         # 3. Validasi Status Rekening (Kategori: Business Rule)
         if nasabah["account_status"] != "ACTIVE":
-            raise BusinessRuleValidationError(BusinessRuleValidationError.ERR_FROZEN)
+            raise BusinessRuleValidationError(BusinessRuleValidationError.ERR_ACCOUNT_FROZEN)
 
         # 4. Validasi Limit Transaksi (Kategori: Business Rule)
         if amount > nasabah["daily_limit"]: 
             raise BusinessRuleValidationError(BusinessRuleValidationError.ERR_LIMIT)
         
         return {
-            "tx_id": iot.get("transaction_id"),
             "acc_id": acc_id,
             "full_name": nasabah["full_name"],
+            "transaction_id": iot.get("transaction_id"),
             "account_status": nasabah["account_status"],
             "transaction_status": "CLEAN",
             "amount": amount,
