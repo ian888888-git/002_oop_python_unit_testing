@@ -46,7 +46,7 @@ def mock_cdc_frozen():
     }
 
 @pytest.fixture
-def mock_cdc_update(self):
+def mock_cdc_update():
     return {
         "op": "U",
         "before": {
