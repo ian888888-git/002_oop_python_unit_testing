@@ -17,39 +17,61 @@ def sync_donatur(self, cdc: dict) -> dict:
         raise DataInvalidError(DataInvalidError.ERR_CDC_STRUCT)
     op_type = cdc["op"]
     payload = cdc["after"]
-    # Penanganan operasi DELETE
+
+    # 2. Penanganan operasi DELETE
     if op_type == "D":
+        # Ambil account_id dari 'before' jika 'after' bernilai None
         npwz = cdc.get("before", {}).get("npwz") if payload is None else payload.get("npwz")
         if not npwz:
             raise DataEmptyError(DataEmptyError.ERR_CDC_EMPTY)
+        # Hapus data nasabah dari memori
         self.donaturs.pop("npwz", None)
         return {}
-    # 2. Validasi field wajib (Kategori: Data Empty)
+    
+    # 3. Validasi payload 'after' untuk operasi INSERT ("C") dan UPDATE ("U")
+    if not payload:
+        raise DataInvalidError(DataInvalidError.ERR_CDC_STRUCT)
+    
+    # 4. Validasi field wajib (NPWZ: Data Empty)
     npwz = payload.get("npwz")
     if not npwz:
         raise DataEmptyError(DataEmptyError.ERR_CDC_EMPTY)
-    # Update data
+    
+    # 5. Penanganan Operasi UPDATE ("U")
     if op_type == "U":
+        # Jika data nasabah belum ada di memori saat update datang,
+        # kita daftarkan data baru dari payload 'after'
         if npwz not in self.donaturs:
-            raise DataEmptyError(DataEmptyError.ERR_CDC_EMPTY)
-        # Perbarui data
+            self.donaturs[npwz] = {
+                "npwz": npwz,
+                "nama_lengkap": payload.get("nama_lengkap"),
+                "status": payload.get("status"),
+                "jenis": payload.get("jenis"),
+                "gender": payload.get("gender"),
+                "no_hp": payload.get("no_hp")
+            }
+        else:
+            # Perbarui data nasabah di memori dengan nilai baru dari payload 'after'
+            self.donaturs[npwz].update({
+                "nama_lengkap": payload.get("nama_lengkap", self.donaturs[npwz].get("nama_lengkap")),
+                "status": payload.get("status", self.donaturs[npwz].get("status")),
+                "jenis": payload.get("jenis", self.donaturs[npwz].get("jenis")),
+                "gender": payload.get("gender", self.donaturs[npwz].get("gender")),
+                "no_hp": payload.get("no_hp", self.donaturs[npwz].get("no_hp"))
+            })
+        return self.donaturs[npwz]
+    # 5. Penanganan Operasi INSERT / CREATE ("C")
+    elif(op_type == "C"):
         self.donaturs[npwz] = {
-            "nama_lengkap": payload.get("nama_lengkap", self.donaturs[npwz].get("nama_lengkap")),
-            "status": payload.get("status", self.donaturs[npwz].get("status")),
-            "jenis": payload.get("jenis", self.donaturs[npwz].get("jenis")),
-            "gender": payload.get("gender", self.donaturs[npwz].get("gender")),
-            "no_hp": payload.get("no_hp", self.donaturs[npwz].get("no_hp"))
+            "npwz": npwz,
+            "nama_lengkap": payload.get("nama_lengkap"),
+            "status": payload.get("status"),
+            "jenis": payload.get("jenis"),
+            "gender": payload.get("gender"),
+            "no_hp": payload.get("no_hp")
         }
-    # 3. Simpan data ke memori lokal 
-    self.donaturs[npwz] = {
-        "npwz": payload.get("npwz"),
-        "nama_lengkap": payload.get("nama_lengkap"),
-        "status": payload.get("status"),
-        "jenis": payload.get("jenis"),
-        "gender": payload.get("gender"),
-        "no_hp": payload.get("no_hp")
-    }
-    return self.donaturs[npwz]
+        return self.donaturs[npwz]
+    return {}
 
 def transaction_dns(self, donation: dict) -> dict:
     """Memproses data transaksi Donasi."""
@@ -67,12 +89,16 @@ def transaction_dns(self, donation: dict) -> dict:
     # 2. Vaidasi Keberadaan Donatur (npwz)
     if npwz not in self.donaturs: 
         raise BusinessRuleValidationError(BusinessRuleValidationError.ERR_NOT_FOUND)
+    donatur = self.donaturs[npwz]
+
     # 3. Validasi Npwz Kosong 
-    if not npwz:
+    if npwz is None:
         raise DataEmptyError(DataEmptyError.ERR_CDC_EMPTY)
+
     # 4. Validasi Program Kosong
     if not program:
         raise DataEmptyError(DataEmptyError.ERR_CDC_EMPTY)
+    
     # 5. Validasi jml_donasi Negative Value
     if jml_donasi < 0:
         raise BusinessRuleValidationError(BusinessRuleValidationError.ERR_AMOUNT_NEGATIVE)
