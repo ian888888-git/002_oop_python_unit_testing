@@ -35,6 +35,7 @@ class BusinessRuleValidationError(Exception):
     ERR_NOT_FOUND = "DATA_TIDAK_DITEMUKAN"
     ERR_FROZEN = "REKENING_DIBEKUKAN"
     ERR_LIMIT = "TRANSAKSI_MELEBIHI_LIMIT"
+    ERR_AMOUNT_NEGATIVE = "NOMINAL_NEGATIF"
     
     # Ditambahkan berdasarkan baris ke-128 pada kode unit testing Anda
     ERR_ACCOUNT_FROZEN = "REKENING_DIBEKUKAN" 

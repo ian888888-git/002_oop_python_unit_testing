@@ -44,6 +44,23 @@ def mock_cdc_frozen():
             "daily_limit":50000000
         }
     }
+
+@pytest.fixture
+def mock_cdc_update(self):
+    return {
+        "op": "U",
+        "before": {
+            "account_id": "USR-TX-001",
+            "account_status": "ACTIVE",
+            "daily_limit": 50000000
+        },
+        "after": {
+            "account_id": "USR-TX-001",
+            "account_status": "FROZEN", # Status diubah menjadi FROZEN
+            "daily_limit": 50000000,
+            "full_name": "John Doe"
+        }
+    }
 @pytest.fixture
 def mock_iot_transactions():
     """Mock data transaksi normal dari mesin ATM (IoT)."""
@@ -148,6 +165,19 @@ class TestBankProcessor:
         with pytest.raises(DataTypeMismatchError) as exc_info:
             db.validate_tx(iot_amount_string)
         assert str(exc_info.value.code) == DataTypeMismatchError.ERR_TYPE
+
+    def test_sync_customer_update_success(self, mock_cdc_insert, mock_cdc_update):
+        """Memastikan perubahan status data nasabah via CDC UPDATE berhasil diperbarui."""
+        db = BankProcessor()
+        # 1. Insert awal
+        db.sync_customer(mock_cdc_insert)
+        
+        # 2. Update status menjadi FROZEN
+        updated_data = db.sync_customer(mock_cdc_update)
+        
+        # 3. Verifikasi
+        assert updated_data["account_status"] == "FROZEN"
+        assert db.customers["USR-TX-001"]["account_status"] == "FROZEN"
     
     # -----------------------------------------------------------------
     # BLOK UJI 3: Skenario Transaksi Sukses (Happy Path)
