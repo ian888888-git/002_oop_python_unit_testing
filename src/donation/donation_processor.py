@@ -73,35 +73,38 @@ def sync_donatur(self, cdc: dict) -> dict:
         return self.donaturs[npwz]
     return {}
 
-def transaction_dns(self, donation: dict) -> dict:
-    """Memproses data transaksi Donasi."""
-    npwz = donation.get("npwz")
-    no_trs = donation.get("no_trs")
-    jml_donasi = donation.get("jml_donasi", 0)
-    tgl_trs = donation.get("tgl_trs")
-    program = donation.get("program")
-    kategori = donation.get("kategori")
-    jenis = donation.get("jenis")
+def transaction_dns(self, donation_cdc: dict) -> dict:
+    """Memproses data transaksi Donasi dari objek CDC."""
+    # Ekstrak payload dari struktur CDC
+    payload = donation_cdc.get("after") if isinstance(donation_cdc, dict) else None
 
-    # 1. Validasi Tipe Data Nominal (jml_donasi)
-    if not isinstance(jml_donasi, (int, float)):
-        raise DataTypeMismatchError(DataTypeMismatchError.ERR_TYPE)
-    # 2. Vaidasi Keberadaan Donatur (npwz)
-    if npwz not in self.donaturs: 
-        raise BusinessRuleValidationError(BusinessRuleValidationError.ERR_NOT_FOUND)
-    donatur = self.donaturs[npwz]
+    if not payload:
+        payload = donation_cdc if isinstance(donation_cdc, dict) else {}
 
-    # 3. Validasi Npwz Kosong 
+    npwz = payload.get("npwz")
+    no_trs = payload.get("no_trs")
+    jml_donasi = payload.get("jml_donasi")
+    tgl_trs = payload.get("tgl_trs")
+    program = payload.get("program")
+    kategori = payload.get("kategori")
+    jenis = payload.get("jenis")
+
+    # 1. Validasi NPWZ Kosong
     if npwz is None:
         raise DataEmptyError(DataEmptyError.ERR_CDC_EMPTY)
 
-    # 4. Validasi Program Kosong
+    # 2. Validasi Program Kosong
     if not program:
         raise DataEmptyError(DataEmptyError.ERR_CDC_EMPTY)
-    
-    # 5. Validasi jml_donasi Negative Value
+
+    # 3. Validasi Tipe Data Nominal (jml_donasi)
+    if not isinstance(jml_donasi, (int, float)) or isinstance(jml_donasi, bool):
+        raise DataTypeMismatchError(DataTypeMismatchError.ERR_TYPE)
+
+    # 4. Validasi jml_donasi Nilai Negatif
     if jml_donasi < 0:
         raise BusinessRuleValidationError(BusinessRuleValidationError.ERR_AMOUNT_NEGATIVE)
+
     return {
         "npwz": npwz,
         "no_trs": no_trs,
@@ -110,4 +113,4 @@ def transaction_dns(self, donation: dict) -> dict:
         "program": program,
         "kategori": kategori,
         "jenis": jenis
-    } 
+    }

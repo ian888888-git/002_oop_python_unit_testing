@@ -95,13 +95,16 @@ class TestDonationProcessor:
             db.sync_donatur(data_empty)
         assert str(exc_info.value.code) == DataEmptyError.ERR_CDC_EMPTY
 
-    # -----------------------------------------
+# -----------------------------------------
     # 1.C.Testing Delete Data Synchronization
     # -----------------------------------------
-    def test_sync_donatur_delete(self, mock_donatur_delete):
+    def test_sync_donatur_delete(self, mock_donatur_save, mock_donatur_delete):
         db = DonationProcessor() 
-        data_donatur = mock_donatur_delete["before"]["npwz"]
-        target_delete = db.donaturs.pop(data_donatur, None)
+        # Simpan data donatur terlebih dahulu
+        db.sync_donatur(mock_donatur_save)
+        
+        # Jalankan sinkronisasi delete
+        target_delete = db.sync_donatur(mock_donatur_delete)
         assert target_delete is not None
 
     # -----------------------------------------
@@ -182,8 +185,3 @@ class TestDonationProcessor:
         assert data_donasi["program"] == "Zakat Mal"
         assert data_donasi["kategori"] == "Zakat"
         assert data_donasi["jenis"] == "TUNAI"
-    
-    
-
-    
-    
