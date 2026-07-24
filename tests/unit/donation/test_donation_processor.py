@@ -95,7 +95,7 @@ class TestDonationProcessor:
             db.sync_donatur(data_empty)
         assert str(exc_info.value.code) == DataEmptyError.ERR_CDC_EMPTY
 
-# -----------------------------------------
+    # -----------------------------------------
     # 1.C.Testing Delete Data Synchronization
     # -----------------------------------------
     def test_sync_donatur_delete(self, mock_donatur_save, mock_donatur_delete):
