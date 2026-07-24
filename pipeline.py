@@ -1,10 +1,12 @@
 from src.bank.bank_pipeline import BankPipeline
+from src.donation.donation_pipeline import DonationPipeline
 
 class PipelineRunner:
     def __init__(self):
         # Mendaftarkan seluruh module pipeline yang aktif ke dalam list internal
         self.registry = [
-            BankPipeline()
+            BankPipeline(),
+            DonationPipeline()
             # KEDEPAN: Jika ada modul baru bertambah, tinggal masukkan ke list ini:
             # AnotherPipeline(),
         ]
